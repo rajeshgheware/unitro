@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="true" scan="true" scanPeriod="30 seconds">
+	<include resource="org/springframework/boot/logging/logback/base.xml" />
+	<property name="LOG_PATH" value="/tmp/unigps" />
+	<property name="LOG_ARCHIVE" value="${LOG_PATH}/archive" />
+	<timestamp key="timestamp-by-second" datePattern="yyyyMMdd'T'HHmmss" />
+
+	<appender name="Console-Appender" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern> %d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread])
+				%highlight(%-5level) %logger{36}.%M - %msg%n		      </pattern>
+		</encoder>
+	</appender>
+	<appender name="unitro-RollingFile-Appender"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOG_PATH}/platform-server-unitro-rolling.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${LOG_ARCHIVE}/platform-server-unitro-rolling.log%d{yyyy-MM-dd}.log
+			</fileNamePattern>
+			<maxHistory>100</maxHistory>
+			<totalSizeCap>500MB</totalSizeCap>
+		</rollingPolicy>
+		<encoder>
+			<pattern> %d{dd-MM-yyyy HH:mm:ss.SSS} %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+	<logger name="com.example.unitro.UnitroDeviceEventsListener"
+		level="debug" additivity="false">
+		<appender-ref ref="Console-Appender" />
+		<appender-ref ref="unitro-RollingFile-Appender" />
+	</logger>
+	<logger name="com.example" level="info" />
+	<logger name="javax.net" level="info" />
+	<logger name="javax.management" level="info" />
+	<logger name="org.springframework" level="info" />
+	<root level="info">
+		<appender-ref ref="Console-Appender" />
+		<appender-ref ref="unitro-RollingFile-Appender" />
+		<!-- <appender-ref ref="EMAIL" /> -->
+	</root>
+</configuration>

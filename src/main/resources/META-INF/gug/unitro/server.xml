@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-ip="http://www.springframework.org/schema/integration/ip"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/ip http://www.springframework.org/schema/integration/ip/spring-integration-ip.xsd">
+
+	<context:property-placeholder />
+
+	<context:component-scan base-package="com.example.unitro"></context:component-scan>
+
+	<int-ip:tcp-connection-factory id="unitrocf"
+		type="server" port="${server.unitro.port}" deserializer="unitroSerializeDeserialize"
+		serializer="unitroSerializeDeserialize" backlog="50" lookup-host="false"
+		using-nio="true" single-use="false" apply-sequence="true" so-timeout="30000" />
+
+	<int-ip:tcp-inbound-gateway id="unitroGateway"
+		connection-factory="unitrocf" request-channel="unitroDeviceMessages"
+		reply-channel="unitroDeviceResponseChannel" error-channel="errorChannel"
+		reply-timeout="5000" />
+
+	<int:publish-subscribe-channel id="unitroDeviceMessages"
+		datatype="java.lang.String" />
+	<int:channel id="unitroDeviceMessagesLocation" datatype="java.lang.String" />
+	<int:channel id="unitroDeviceResponseChannel" datatype="java.lang.String" />
+
+	<int:recipient-list-router id="unitro"
+		input-channel="unitroDeviceMessages" default-output-channel="unitroDeviceMessagesLocation">
+
+	</int:recipient-list-router>
+
+	<int:transformer id="
+			errorHandler " input-channel="errorChannel"
+		expression="payload.failedMessage.payload + ':' + payload.cause.message" />
+
+
+	<bean id="integrationConversionService"
+		class="org.springframework.context.support.ConversionServiceFactoryBean"
+		primary="false">
+		<property name="converters">
+			<list>
+				<bean class="com.example.unitro.ByteArrayToStringConverter"></bean>
+			</list>
+		</property>
+	</bean>
+</beans>
